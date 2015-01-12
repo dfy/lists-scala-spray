@@ -41,5 +41,10 @@ trait MyService extends HttpService {
           List()
         }
       }
+    } ~
+    path ("entity" / Segment / "child" / Segment) { (id, childId) =>
+      get {
+        complete(List(s"detail ${id}, ${childId}", "Some random stuff"))
+      }
     }
 }
