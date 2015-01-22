@@ -29,10 +29,12 @@ class MyServiceActor extends Actor with MyService {
   def receive = runRoute(myRoute)
 }
 
-
 // this trait defines our service behavior independently from the service actor
 trait MyService extends HttpService {
   import Json4sProtocol._
+  
+  case class Video(url: String)
+  case class OtherThing(url:String, count:Integer)
 
   val myRoute =
     path("") {
@@ -44,7 +46,13 @@ trait MyService extends HttpService {
     } ~
     path ("entity" / Segment / "child" / Segment) { (id, childId) =>
       get {
-        complete(List(s"detail ${id}, ${childId}", "Some random stuff"))
+        complete(
+          List(
+            Video(s"detail ${id}, ${childId}"), 
+            OtherThing("Some random stuff", 10), 
+            List("a", "x")
+            )
+          )
       }
     }
 }
