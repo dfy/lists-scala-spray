@@ -6,9 +6,13 @@ import scala.collection.mutable.Map
 
 object UrlList {
 	case class Url(url: String)
-	case class CreateList(uuid:String, title:String)
-	case class AddUrlToList(uuid: String, url: String)
-	case class ViewList(uuid: String)
+
+	trait UrlListCommand {
+		val uuid: String
+	}
+	case class CreateList(uuid:String, title:String) extends UrlListCommand
+	case class AddUrlToList(uuid: String, url: String) extends UrlListCommand
+	case class ViewList(uuid: String) extends UrlListCommand
 }
 
 trait UrlList { this: Actor =>
@@ -38,10 +42,12 @@ trait UrlListLookup { this: Actor =>
 		case CreateList(uuid, title) =>
 			val newList = context.actorOf(Props[UrlListManager], s"url-list-${uuid}")
 			lists += (uuid -> newList)
-		case addUrl: AddUrlToList =>
-			lists.getOrElse(addUrl.uuid, {throw new Exception("Cannot find list for adding url")}) forward addUrl
-		case viewList: ViewList =>
-			lists.getOrElse(viewList.uuid, {throw new Exception("Cannot find list for viewing")}) forward viewList
+		case listCommand: UrlListCommand =>
+			lists.getOrElse(listCommand.uuid, {throwListNotFound(listCommand)}) forward listCommand
+	}
+
+	def throwListNotFound(listCommand: UrlListCommand) = {
+		throw new Exception(s"Cannot find list '${listCommand.uuid}'")
 	}
 }
 
