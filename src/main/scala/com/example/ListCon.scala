@@ -38,6 +38,10 @@ trait UrlListLookup { this: Actor =>
 		case CreateList(uuid, title) =>
 			val newList = context.actorOf(Props[UrlListManager], s"url-list-${uuid}")
 			lists += (uuid -> newList)
+		case addUrl: AddUrlToList =>
+			lists.getOrElse(addUrl.uuid, {throw new Exception("Cannot find list for adding url")}) forward addUrl
+		case viewList: ViewList =>
+			lists.getOrElse(viewList.uuid, {throw new Exception("Cannot find list for viewing")}) forward viewList
 	}
 }
 

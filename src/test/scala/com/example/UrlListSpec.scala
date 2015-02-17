@@ -39,6 +39,7 @@ class UrlListSpec extends TestKit(ActorSystem("UrlListSpec"))
     }
 
     "UrlListCreator" should {
+
     	"create a new list" in {
     		val lookupRef = TestActorRef[TestUrlListLookup]
     		val lookup = lookupRef.underlyingActor
@@ -49,6 +50,16 @@ class UrlListSpec extends TestKit(ActorSystem("UrlListSpec"))
 
     		lookup.lists must contain key "xxx"
     		lookup.lists must have size (1)
+    	}
+
+    	"forward other messages to the list" in {
+    		val lookupRef = TestActorRef[TestUrlListLookup]
+
+    		lookupRef ! CreateList("xxx", "My New List")
+    		lookupRef ! AddUrlToList("xxx", "http://www.google.com")
+    		lookupRef ! ViewList("xxx")
+
+    		expectMsg(List(Url("http://www.google.com")))
     	}
     }
 }
