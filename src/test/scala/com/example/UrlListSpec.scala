@@ -16,6 +16,7 @@ class TestUrlListLookup extends Actor with UrlListLookup {
 class UrlListSpec extends TestKit(ActorSystem("UrlListSpec"))
     with WordSpecLike
     with MustMatchers
+    with ImplicitSender
     with BeforeAndAfterAll {
 
     import UrlList._
@@ -23,10 +24,17 @@ class UrlListSpec extends TestKit(ActorSystem("UrlListSpec"))
     override def afterAll() { system.shutdown() }
 
     "UrlList" should {
+
         "add a url to a list" in {
             val real = TestActorRef[TestUrlList].underlyingActor
             real.receive(AddUrlToList("xxx", "http://www.google.com"))
             real.urls must contain (Url("http://www.google.com"))
+        }
+
+        "return an immutable list for viewing" in {
+        	val listRef = TestActorRef[TestUrlList]
+        	listRef ! ViewList("xxx")
+        	expectMsg(List[String]())
         }
     }
 

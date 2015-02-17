@@ -8,6 +8,7 @@ object UrlList {
 	case class Url(url: String)
 	case class CreateList(uuid:String, title:String)
 	case class AddUrlToList(uuid: String, url: String)
+	case class ViewList(uuid: String)
 }
 
 trait UrlList { this: Actor =>
@@ -18,6 +19,8 @@ trait UrlList { this: Actor =>
 	def urlListReceive: Receive = {
 		case AddUrlToList(_, url) =>
 			urls += Url(url)
+		case ViewList(_) =>
+			sender ! urls.toList
 	}
 }
 
