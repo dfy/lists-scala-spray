@@ -1,32 +1,39 @@
 package com.example
 
-import org.specs2.mutable.Specification
-import spray.testkit.Specs2RouteTest
-import spray.http._
-import StatusCodes._
+import org.scalatest._
+import spray.testkit.ScalatestRouteTest
+import spray.http.HttpEntity
+import spray.http.ContentTypes
+import spray.can.server.Stats
+import spray.http.StatusCodes._
+import org.json4s._
 
-class MyServiceSpec extends Specification with Specs2RouteTest with MyService {
+class MainSpec extends FreeSpec with Matchers with ScalatestRouteTest with MyService {
   def actorRefFactory = system
-  
-  /*"MyService" should {
 
-    "return a greeting for GET requests to the root path" in {
-      Get() ~> myRoute ~> check {
-        responseAs[String] must contain("Say hello")
+  "The MyService Route" - {
+    "when listing entities" - {
+      "returns a JSON list" in {
+        import Json4sProtocol._
+        import UrlList._
+
+        Get("/list/xxx001") ~> myRoute ~> check {
+          assert(contentType.mediaType.isApplication)
+
+          // check content type
+          contentType.toString should include("application/json")
+
+          // check the sample data
+          val response = responseAs[List[Url]]
+          response.size should equal(2)
+          response(0).url should equal("http://www.google.co.uk")
+          response(0).url should equal("http://www.bbc.co.uk")
+
+          //Check http status
+          status should equal(OK)
+        }
       }
     }
-
-    "leave GET requests to other paths unhandled" in {
-      Get("/kermit") ~> myRoute ~> check {
-        handled must beFalse
-      }
-    }
-
-    "return a MethodNotAllowed error for PUT requests to the root path" in {
-      Put() ~> sealRoute(myRoute) ~> check {
-        status === MethodNotAllowed
-        responseAs[String] === "HTTP method not allowed, supported methods: GET"
-      }
-    }
-  }*/
+  }
 }
+

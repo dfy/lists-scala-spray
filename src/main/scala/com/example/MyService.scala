@@ -1,6 +1,10 @@
 package com.example
 
-import akka.actor.Actor
+import scala.concurrent.duration._
+
+import akka.actor.{Actor, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import spray.routing._
 import spray.http._
 import MediaTypes._
@@ -32,9 +36,19 @@ class MyServiceActor extends Actor with MyService {
 // this trait defines our service behavior independently from the service actor
 trait MyService extends HttpService {
   import Json4sProtocol._
+  import UrlList._
+
+  implicit def executionContext = actorRefFactory.dispatcher
+  implicit val timeout = Timeout(5 seconds)
   
   case class Video(url: String)
   case class OtherThing(url:String, count:Integer)
+
+  val lookupId = "xxx001"
+  val lookup = actorRefFactory.actorOf(Props[UrlListLookupManager], "list-lookup")
+  lookup ! CreateList(lookupId, "First list")
+  lookup ! AddUrlToList(lookupId, "http://www.google.co.uk")
+  lookup ! AddUrlToList(lookupId, "http://www.bbc.co.uk")
 
   val myRoute =
     path("") {
@@ -53,6 +67,15 @@ trait MyService extends HttpService {
             List("a", "x")
             )
           )
+      }
+    } ~
+    path ("list" / Segment) { (listId) =>
+      get {
+        complete {
+          lookup
+            .ask(ViewList(listId))
+            .mapTo[List[String]]
+        }
       }
     }
 }
